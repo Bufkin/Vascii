@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python311
 # +-------------------------------------------------------------------------------------+
 # | USAGE:                                                                              |
 # |    python3 vascii.py <mode (0|1)> <scale (0.1:0.3)> <contrast (1:3)> <invert (0|1)> |
@@ -43,7 +43,7 @@ def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
-    
+
     # Set mode: Stream to server or local terminal
     if mode == 1:
         send_sock.connect((server_ip, 20001))
@@ -55,7 +55,7 @@ def main():
 
         # Adjust remote stream scale
         adjustScale()
-    
+
     # Processing loop
     while True:
         # Capture a frame from the webcam

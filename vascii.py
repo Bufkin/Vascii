@@ -1,11 +1,17 @@
 #!/usr/bin/env python311
+#
+import threading
+import socket
+import os
+import sys
+import time
+import cv2
 # +-------------------------------------------------------------------------------------+
 # | USAGE:                                                                              |
 # |    python3 vascii.py <mode (0|1)> <scale (0.1:0.3)> <contrast (1:3)> <invert (0|1)> |
 # +-------------------------------------------------------------------------------------+
 
 # Imports
-import cv2, time, sys, os, socket, threading
 
 # Global variables and objects
 scale = 0.15
@@ -23,6 +29,8 @@ send_sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
 recv_sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
 
 # Main function
+
+
 def main():
     # Set parameters from cmd arguments
     global invert, contrast, scale, cols, rows, mode, remoteCols, remoteRows, paddingSize
@@ -60,28 +68,29 @@ def main():
     while True:
         # Capture a frame from the webcam
         ret, frame = cap.read()
-        frame = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        frame = cv2.resize(frame, None, fx=scale, fy=scale,
+                           interpolation=cv2.INTER_AREA)
         width = len(frame[0])*2
         height = len(frame)
 
         if mode == 1:
             if (width > remoteCols) or (height > remoteRows):
-                scale-=0.001
+                scale -= 0.001
             elif ((width < remoteCols) or (height < remoteRows)) and not ((width == remoteCols) or (height == remoteRows)):
-                scale+=0.001
+                scale += 0.001
         else:
             if (width > cols) or (height > rows):
-                scale-=0.001
+                scale -= 0.001
             elif ((width < cols) or (height < rows)) and not ((width == cols) or (height == rows)):
-                scale+=0.001
+                scale += 0.001
 
         # Convert frame to greyscale
         gscale = []
         for b, i in enumerate(frame):
             for a, x in enumerate(i):
                 sum = int(x[0])+int(x[1])+int(x[2])
-                sum/=3
-                sum*=contrast
+                sum /= 3
+                sum *= contrast
                 sum = int(sum)
                 x = [sum, sum, sum]
                 i[a] = x
@@ -104,6 +113,8 @@ def main():
     cap.release()
 
 # Convert greyscale pixel array to ascii string
+
+
 def img2ascii(pixels, width):
     global invert, contrast, scale, cols, mode, rows, remoteCols, remoteRows, paddingSize
     # ASCII art charset
@@ -121,7 +132,8 @@ def img2ascii(pixels, width):
     padding = " " * paddingSize
     new_pixels_count = len(new_pixels)
     # Construct the final frame string
-    ascii_image = [padding+new_pixels[index:index + width] for index in range(0, new_pixels_count, width)]
+    ascii_image = [padding+new_pixels[index:index + width]
+                   for index in range(0, new_pixels_count, width)]
     ascii_image = "\n".join(ascii_image)
     # Display or send
     if mode == 1:
@@ -130,18 +142,24 @@ def img2ascii(pixels, width):
         print("\r"+ascii_image)
 
 # Send an ascii string image to server
+
+
 def sendFrame(frame):
     global send_sock
     bytesToSend = str.encode(frame)
     send_sock.sendall(bytesToSend)
 
 # Adjust scale
+
+
 def adjustScale():
     global send_sock, cols, rows
     scaleMsg = str.encode("ROWS "+str(rows)+" COLS "+str(cols)+"|")
     send_sock.sendall(scaleMsg)
 
 # Receive and display an ascii string image
+
+
 def recvStream(self):
     global recv_sock, remoteRows, remoteCols
     while True:
@@ -157,6 +175,7 @@ def recvStream(self):
             print(frame)
         else:
             print(data)
+
 
 if __name__ == "__main__":
     main()
